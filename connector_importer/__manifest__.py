@@ -5,12 +5,13 @@
 {
     "name": "Connector Importer",
     "summary": """This module takes care of import sessions.""",
-    "version": "13.0.1.3.3",
+    "version": "13.0.1.4.0",
     "depends": ["connector", "queue_job"],
     "author": "Camptocamp, Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "category": "Connector",
     "website": "https://github.com/OCA/connector-interfaces",
+    "maintainers": ["simahawk"],
     "data": [
         "data/ir_cron.xml",
         "security/security.xml",
