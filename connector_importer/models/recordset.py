@@ -9,7 +9,7 @@ from collections import OrderedDict
 from odoo import api, fields, models
 
 from odoo.addons.base_sparse_field.models.fields import Serialized
-from odoo.addons.queue_job.job import DONE, STATES, job
+from odoo.addons.queue_job.job import DONE, STATES
 
 from ..log import logger
 from .job_mixin import JobRelatedMixin
@@ -216,7 +216,6 @@ class ImportRecordset(models.Model, JobRelatedMixin):
     def available_importers(self):
         return self.import_type_id.available_importers()
 
-    @job(default_channel="root.connector_importer")
     def import_recordset(self):
         """This job will import a recordset."""
         with self.backend_id.work_on(self._name) as work:

@@ -14,6 +14,7 @@
     "maintainers": ["simahawk"],
     "data": [
         "data/ir_cron.xml",
+        "data/queue_job_data.xml",
         "security/security.xml",
         "security/ir.model.access.csv",
         "views/backend_views.xml",
