@@ -361,8 +361,7 @@ class RecordImporter(Component):
         return counters
 
     def _trigger_finish_events(self, record, is_last_importer=False):
-        """Trigger events when the importer has done its job.
-        """
+        """Trigger events when the importer has done its job."""
         if is_last_importer:
             # Trigger global event for recordset
             self.recordset._event(

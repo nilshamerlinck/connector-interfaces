@@ -27,7 +27,7 @@ class TestRecordImporter(TestImporterBase):
         )
 
     def _get_components(self):
-        from .fake_components import PartnerRecordImporter, PartnerMapper
+        from .fake_components import PartnerMapper, PartnerRecordImporter
 
         return [PartnerRecordImporter, PartnerMapper]
 

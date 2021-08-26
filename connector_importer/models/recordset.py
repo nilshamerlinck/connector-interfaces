@@ -128,8 +128,7 @@ class ImportRecordset(models.Model, JobRelatedMixin):
         return self.shared_data or {}
 
     def _prepare_for_import_session(self, start=True):
-        """Wipe all session related data.
-        """
+        """Wipe all session related data."""
         report_data = {}
         if start:
             report_data["_last_start"] = fields.Datetime.to_string(
@@ -225,8 +224,7 @@ class ImportRecordset(models.Model, JobRelatedMixin):
             return importer.run(self)
 
     def run_import(self):
-        """ queue a job for creating records (import.record items)
-        """
+        """queue a job for creating records (import.record items)"""
         job_method = self.with_delay().import_recordset
         if self.debug_mode():
             logger.warn("### DEBUG MODE ACTIVE: WILL NOT USE QUEUE ###")

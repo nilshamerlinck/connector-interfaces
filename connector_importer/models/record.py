@@ -94,8 +94,7 @@ class ImportRecord(models.Model, JobRelatedMixin):
             return importer.run(self, is_last_importer=importer_config.is_last_importer)
 
     def run_import(self):
-        """ queue a job for importing data stored in to self
-        """
+        """queue a job for importing data stored in to self"""
         self.ensure_one()
         use_job = self.recordset_id.import_type_id.use_job
         # TODO: use ctx key to disable job instead
