@@ -52,6 +52,9 @@ class TestSource(BaseTestCase):
         self.assertItemsEqual(
             source._config_summary_fields, ["chunk_size", "fake_param"]
         )
+        source.config_summary = False
+        source._compute_config_summary()
+        self.assertTrue(source.config_summary)
 
     def test_source_get_lines(self):
         source = self.source

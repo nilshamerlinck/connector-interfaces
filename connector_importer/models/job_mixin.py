@@ -8,11 +8,7 @@ from odoo.addons.queue_job.job import DONE, STATES
 
 
 class JobRelatedMixin(models.AbstractModel):
-    """Mixin klass for queue.job relationship.
-
-    We do not use an abstract model to be able to not re-define
-    the relation on each inheriting model.
-    """
+    """ Mixin klass for queue.job relationship. """
 
     _name = "job.related.mixin"
     _description = "Job Related Mixin"
