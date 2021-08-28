@@ -15,7 +15,7 @@ class JobRelatedMixin(models.AbstractModel):
 
     job_id = fields.Many2one("queue.job", string="Job", readonly=True)
     job_state = fields.Selection(
-        STATES, string="Job State", readonly=True, index=True, related="job_id.state"
+        string="Job State", readonly=True, index=True, related="job_id.state"
     )
 
     @api.model

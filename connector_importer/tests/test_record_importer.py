@@ -5,6 +5,7 @@
 from odoo.tools import mute_logger
 
 from .common import TestImporterBase
+from .fake_components import PartnerMapper
 
 MOD_PATH = "odoo.addons.connector_importer"
 RECORD_MODEL = MOD_PATH + ".models.record.ImportRecord"
@@ -27,9 +28,10 @@ class TestRecordImporter(TestImporterBase):
         )
 
     def _get_components(self):
-        from .fake_components import PartnerMapper, PartnerRecordImporter
+        from .fake_components import PartnerMapper, UserBinder, PartnerRecordImporter
+        from ..components.mapper import ImportMapper
 
-        return [PartnerRecordImporter, PartnerMapper]
+        return [PartnerRecordImporter, UserBinder, PartnerMapper, ImportMapper]
 
     @mute_logger("[importer]")
     def test_importer_create(self):
@@ -48,12 +50,29 @@ class TestRecordImporter(TestImporterBase):
         self.assertEqual(self.env[model].search_count([("ref", "like", "id_%")]), 10)
 
     @mute_logger("[importer]")
-    def test_importer_get_mapper(self):
-        self.record.set_data(self.fake_lines)
+    def test_importer_with_options(self):
+        PartnerMapper = self._get_components()[2]
+        saved_direct = PartnerMapper.direct
+        PartnerMapper.direct = saved_direct.copy()
+        PartnerMapper.direct.extend([
+            ("create_uid", "create_uid"),
+            ("create_date", "create_date"),
+            ("write_uid", "write_uid"),
+            ("write_date", "write_date"),
+        ])
+        lines = self._fake_lines(10, keys=("id", "fullname"))
+        self.record.set_data(lines)
+        for line in lines:
+            line["create_uid"] = 1
+            line["create_date"] = "2021-09-03"
+            line["write_uid"] = 1
+            line["write_date"] = "2021-09-03"
         saved_options = self.import_type.options
-        self.import_type.options += """
+        self.import_type.options = saved_options + """
   options:
-    mapper: fake.partner.mapper"""
+    record_handler:
+      override_create_date: 1
+      override_create_uid: 1"""
         model = "res.partner"
         res = self.record.run_import()
         report = self.recordset.get_report()
@@ -61,14 +80,30 @@ class TestRecordImporter(TestImporterBase):
             model: {"created": 10, "errored": 0, "updated": 0, "skipped": 0},
         }
         self.assertEqual(res, expected)
-        self.import_type.options += "_error"
+
+        self.import_type.options = saved_options + """
+  options:
+    mapper: fake.partner.mapper_error"""
         res = self.record.run_import()
         report = self.recordset.get_report()
         expected = {
             model: {"created": 0, "errored": 10, "updated": 0, "skipped": 0},
         }
         self.assertEqual(res, expected)
+
+        self.import_type.options = saved_options + """
+  options:
+    record_handler:
+      skip_fields_unchanged: 1
+      override_write_date: 1
+      override_write_uid: 1"""
+        res = self.record.run_import()
+        expected = {
+            model: {"created": 0, "errored": 0, "updated": 10, "skipped": 0},
+        }
+        self.assertEqual(res, expected)
         self.import_type.options = saved_options
+        PartnerMapper.direct = saved_direct
 
     @mute_logger("[importer]")
     def test_importer_skip(self):
@@ -128,3 +163,20 @@ class TestRecordImporter(TestImporterBase):
             self.assertEqual(len(report[model][k]), v)
         skipped_msg1 = report[model]["skipped"][0]["message"]
         self.assertEqual(skipped_msg1, "ALREADY EXISTS: ref=id_1")
+
+    @mute_logger("[importer]")
+    def test_importer_translatable(self):
+        fr_lang = self.env["res.lang"]._activate_lang("fr_FR")
+        assert fr_lang
+        IrTranslation = self.env["ir.translation"]
+        trans = IrTranslation.search([("name", "=", "city")])
+        count_trans = len(trans)
+        lines = self._fake_lines(10, keys=("id", "fullname", "city", "city:fr_FR"))
+        self.record.set_data(lines)
+        res = self.record.run_import()
+        model = "res.partner"
+        expected = {
+            model: {"created": 10, "errored": 0, "updated": 0, "skipped": 0},
+        }
+        self.assertEqual(res, expected)
+        self.assertEqual(len(IrTranslation.search([("name", "=", "city")])), count_trans + 10)

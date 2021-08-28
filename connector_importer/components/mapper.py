@@ -49,7 +49,13 @@ class ImportMapper(Component):
         """
         return self.required
 
-    translatable = []
+    translatable = [
+        # The Translatable keys (without language code) are declared here.
+        # The source contains translatable columns in the form:
+        # `mapper_key:lang`
+        # whereas `mapper_key` is an odoo record field to translate
+        # and lang matches one of the installed languages.
+        ]
 
     def translatable_keys(self, create=False):
         """Return translatable keys for this mapper.

@@ -12,7 +12,6 @@ class OdooRecordHandler(Component):
     _inherit = "importer.base.component"
     _usage = "odoorecord.handler"
 
-    # TODO: collect these from `work.options.record_handler`
     unique_key = ""
     unique_key_is_xmlid = False
     importer = None
@@ -26,9 +25,17 @@ class OdooRecordHandler(Component):
     override_write_date = False
 
     def _init_handler(self, importer=None, unique_key=None, unique_key_is_xmlid=False):
-        self.importer = importer
-        self.unique_key = unique_key
+        try:
+            options = self.work.options["record_handler"]
+        except AttributeError:
+            options = {}
+        self.importer = importer or options.get("importer")
+        self.unique_key = unique_key or options.get("unique_key", "")
         self.unique_key_is_xmlid = unique_key_is_xmlid
+        self.override_create_uid = options.get("override_create_uid", False)
+        self.override_create_date = options.get("override_create_date", False)
+        self.override_write_uid = options.get("override_write_uid", False)
+        self.override_write_date = options.get("override_write_date", False)
 
     def odoo_find_domain(self, values, orig_values):
         """Domain to find the record in odoo."""
@@ -56,10 +63,29 @@ class OdooRecordHandler(Component):
     def update_translations(self, odoo_record, translatable, ctx=None):
         """Write translations on given record."""
         ctx = ctx or {}
+        context = self.env.context.copy()
+        context.update(ctx)
         for lang, values in translatable.items():
-            odoo_record.with_context(lang=lang, **self.write_context()).write(
-                values.copy()
-            )
+            self._update_field_translations(odoo_record, lang, values, context)
+            # TODO: confirm this has no effect to IrTranslation
+            # odoo_record.with_context(lang=lang, **self.write_context()).write(
+            #     values.copy()
+            # )
+
+    def _update_field_translations(self, odoo_record, lang, values, ctx=None):
+        IrTranslation = self.env["ir.translation"]
+        lang_values = [
+            {
+                "type": "model",
+                "name": fname,
+                "lang": lang,
+                "res_id": odoo_record.id,
+                "src": getattr(odoo_record, fname, ""),
+                "value": value,
+                "state": "translated",
+                }
+            for fname, value in values.items()]
+        IrTranslation.with_context(ctx)._upsert_translations(lang_values)
 
     def odoo_pre_create(self, values, orig_values):
         """Do some extra stuff before creating a missing record."""
@@ -78,9 +104,12 @@ class OdooRecordHandler(Component):
     def odoo_create(self, values, orig_values):
         """Create a new odoo record."""
         self.odoo_pre_create(values, orig_values)
-        # TODO: remove keys that are not model's fields
+        # copy values to not affect original values (mainly for introspection)
+        values_for_create = values.copy()
+        # purge unneeded values
+        self._odoo_write_purge_values(None, values_for_create)
         odoo_record = self.model.with_context(**self.create_context()).create(
-            values.copy()
+            values_for_create
         )
         # force uid
         if self.override_create_uid and values.get("create_uid"):
@@ -162,10 +191,12 @@ class OdooRecordHandler(Component):
         for fname in field_names:
             if fname not in self.model._fields:
                 values.pop(fname)
+        if not odoo_record:
+            return
         # remove fields having the same value
         field_names = tuple(values.keys())
         if self.work.options.record_handler.skip_fields_unchanged:
             current_values = odoo_record.read(field_names, load="_classic_write")
-            for k, v in current_values.items():
-                if values[k] != v:
+            for k, v in current_values[0].items():
+                if values.get(k) == v:
                     values.pop(k)

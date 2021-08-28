@@ -34,6 +34,7 @@ class MockedSource(object):
 
     lines = []
     chunks_size = 5
+    _reporter = None
 
     def __init__(self, lines, chunk_size=5):
         self.lines = lines
@@ -41,6 +42,16 @@ class MockedSource(object):
 
     def get_lines(self):
         return gen_chunks(self.lines, self.chunks_size)
+
+    def get_reporter(self):
+        return self._reporter
+
+
+class MockedReporter(object):
+    """A fake reporter."""
+
+    def report_get(self, source):
+        return {"complete_filename": source._name}, source._name
 
 
 def fake_lines(count, keys):

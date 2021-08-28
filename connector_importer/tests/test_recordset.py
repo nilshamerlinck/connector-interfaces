@@ -53,7 +53,7 @@ class TestRecordset(common.SavepointCase):
             tuple(self.recordset.import_type_id.available_importers()),
         )
 
-    def test_get_set_raw_report(self):
+    def test_get_set_raw_report_shared(self):
         val = {"baz": "bar"}
         # store report
         self.recordset.set_report(val)
@@ -71,6 +71,9 @@ class TestRecordset(common.SavepointCase):
         # store report
         self.recordset.set_report(val, reset=True)
         self.assertDictEqual(self.recordset.get_report(), val)
+        rs = self.recordset
+        rs.set_shared(val)
+        self.assertEqual(rs.get_shared(), val)
 
     def test_get_report_html_data(self):
         val = {

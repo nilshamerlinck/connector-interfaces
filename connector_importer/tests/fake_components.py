@@ -14,7 +14,9 @@ class PartnerMapper(Component):
 
     defaults = [("is_company", False)]
 
-    direct = [("id", "ref"), ("fullname", "name")]
+    direct = [("id", "ref"), ("fullname", "name"), ("city", "city")]
+
+    translatable = ["city"]
 
     def finalize(self, map_record, values):
         res = super().finalize(map_record, values)
@@ -22,6 +24,15 @@ class PartnerMapper(Component):
         if self.env.context.get("_test_break_import"):
             raise ValueError(self.env.context.get("_test_break_import"))
         return res
+
+
+class UserBinder(Component):
+    _name = "fake.user.binder"
+    _inherit = "base.binder"
+    _apply_on = "res.users"
+
+    def to_internal(self, external_id, unwrap=False, company=None):
+        return self.env[self._apply_on].browse(external_id)
 
 
 class PartnerRecordImporter(Component):

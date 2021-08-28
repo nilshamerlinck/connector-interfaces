@@ -4,6 +4,7 @@
 
 from psycopg2 import IntegrityError
 
+from odoo import exceptions
 import odoo.tests.common as common
 from odoo.tools import mute_logger
 
@@ -80,3 +81,7 @@ class TestImportType(common.SavepointCase):
             importers,
             expected,
         )
+
+    def test_check_options(self):
+        with self.assertRaisesRegex(exceptions.UserError, "No options found for"):
+            itype = self.type_model.create({"name": "Ok", "key": "ok", "options": ""})

@@ -6,7 +6,7 @@ import mock
 
 from odoo.tools import mute_logger
 
-from .common import TestImporterBase
+from .common import MockedReporter, MockedSource, TestImporterBase
 from .fake_components import PartnerMapper, PartnerRecordImporter
 
 MOD_PATH = "odoo.addons.connector_importer"
@@ -34,11 +34,6 @@ class TestRecordsetImporter(TestImporterBase):
         mocked_run_inport.assert_called()
         # we expect 5 records w/ 20 lines each
         records = self.recordset.get_records()
-        rs = self.recordset
-        rs.report_html, rs.docs_html = False, False
-        self.recordset._compute_docs_html()
-        self.recordset._compute_report_html()
-        self.assertNotEqual((False, False), (rs.report_html, rs.docs_html))
         self.assertEqual(len(records), 5)
         for rec in records:
             data = rec.get_data()
@@ -58,3 +53,19 @@ class TestRecordsetImporter(TestImporterBase):
         # we expect 5 records w/ 20 lines each
         records = self.recordset.get_records()
         self.assertEqual(len(records), 5)
+        rs = self.recordset
+        rs.report_html, rs.docs_html = False, False
+        rs._compute_docs_html()
+        rs._compute_report_html()
+        self.assertNotEqual((False, False), (rs.report_html, rs.docs_html))
+        rs.report_data = False
+        rs._compute_report_html()
+        self.assertEqual(False, rs.report_html)
+        self.assertEqual((False, False), (rs.report_file, rs.report_filename))
+        rs.generate_report()
+        # No reporter is set
+        self.assertEqual((False, False), (rs.report_file, rs.report_filename))
+        MockedSource._reporter = MockedReporter()
+        rs.generate_report()
+        self.assertNotEqual((False, False), (rs.report_file, rs.report_filename))
+        rs.new()._compute_docs_html()

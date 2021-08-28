@@ -84,7 +84,7 @@ class ImportType(models.Model):
         no_options = self.browse()
         for rec in self:
             if not rec.options:
-                no_options.append(rec)
+                no_options += rec
             # TODO: validate yaml schema (maybe w/ Cerberus?)
         if no_options:
             raise exceptions.UserError(
