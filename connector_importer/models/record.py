@@ -7,6 +7,7 @@ import json
 import os
 
 from odoo import api, fields, models
+from odoo.tools import DotDict
 
 from odoo.addons.queue_job.job import job
 
@@ -86,6 +87,8 @@ class ImportRecord(models.Model, JobRelatedMixin):
         :param model_name: name of the model to import
         :param is_last_importer: flag for last importer of the recordset
         """
+        if type(importer_config) is dict:
+            importer_config = DotDict(importer_config)
         kwargs = {
             "options": importer_config.options,
         }
