@@ -7,6 +7,7 @@ import json
 import os
 
 from odoo import api, fields, models
+from odoo.tools import DotDict
 
 from ..log import logger
 from .job_mixin import JobRelatedMixin
@@ -76,6 +77,8 @@ class ImportRecord(models.Model, JobRelatedMixin):
 
         :param importer_config: config for importer of the recordset
         """
+        if type(importer_config) is dict:
+            importer_config = DotDict(importer_config)
         kwargs = {
             "options": importer_config.options,
         }
