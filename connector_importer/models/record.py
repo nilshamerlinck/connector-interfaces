@@ -82,6 +82,7 @@ class ImportRecord(models.Model, JobRelatedMixin):
         kwargs = {
             "options": importer_config.options,
         }
+        # Put assert False here to test import.recordset._get_global_state
         with self.backend_id.with_context(**importer_config.context).work_on(
             self._name, **kwargs
         ) as work:

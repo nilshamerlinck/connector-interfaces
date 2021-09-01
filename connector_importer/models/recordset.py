@@ -202,14 +202,14 @@ class ImportRecordset(models.Model, JobRelatedMixin):
     def _get_global_state(self):
         if not self.job_id:
             return DONE
-        res = DONE
-        for item in self.record_ids:
-            if not item.job_id:
-                # TODO: investigate how this is possible
-                continue
-            # TODO: check why `item.job_state` does not reflect the job state
-            if item.job_id.state != DONE:
-                res = item.job_id.state
+        res = self.job_state
+        job_states = set(self.record_ids.mapped('job_state'))
+        l = len(STATES)
+        # This logic will prioritize showing FAILED status first
+        for i in range(l):
+            state = STATES[l - i - 1][0]
+            if state != DONE and state in job_states:
+                res = state
                 break
         return res
 
