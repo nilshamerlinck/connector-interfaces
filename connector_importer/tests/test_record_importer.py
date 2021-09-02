@@ -48,6 +48,29 @@ class TestRecordImporter(TestImporterBase):
         self.assertEqual(self.env[model].search_count([("ref", "like", "id_%")]), 10)
 
     @mute_logger("[importer]")
+    def test_importer_get_mapper(self):
+        self.record.set_data(self.fake_lines)
+        saved_options = self.import_type.options
+        self.import_type.options += """
+  options:
+    mapper: fake.partner.mapper"""
+        model = "res.partner"
+        res = self.record.run_import()
+        report = self.recordset.get_report()
+        expected = {
+            model: {"created": 10, "errored": 0, "updated": 0, "skipped": 0},
+        }
+        self.assertEqual(res, expected)
+        self.import_type.options += "_error"
+        res = self.record.run_import()
+        report = self.recordset.get_report()
+        expected = {
+            model: {"created": 0, "errored": 10, "updated": 0, "skipped": 0},
+        }
+        self.assertEqual(res, expected)
+        self.import_type.options = saved_options
+
+    @mute_logger("[importer]")
     def test_importer_skip(self):
         # generate 10 records
         lines = self._fake_lines(10, keys=("id", "fullname"))

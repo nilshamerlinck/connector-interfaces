@@ -22,12 +22,7 @@ class RecordImporterCSVStd(Component):
     _apply_on = None
     _use_xmlid = True
     _record_handler_usage = "odoorecord.handler.csv"
-
-    @property
-    def mapper(self):
-        if not self._mapper:
-            self._mapper = self.component(usage="importer.automapper")
-        return self._mapper
+    _mapper_usage = "importer.automapper"
 
     def prepare_load_params(self, lines):
         """Prepare the parameters for the `load()` standard method.

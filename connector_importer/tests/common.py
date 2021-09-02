@@ -78,10 +78,10 @@ class TestImporterMixin(object):
             {
                 "name": "Fake",
                 "key": "fake",
+                # The tripple quotes should be at end to ease adding more options
                 "options": """
 - model: res.partner
-  importer: fake.partner.importer
-                """,
+  importer: fake.partner.importer""",
             }
         )
         cls.recordset = cls.env["import.recordset"].create(

@@ -89,8 +89,13 @@ class RecordImporter(Component):
     # just an instance cache for the mapper
     _mapper = None
 
-    # TODO: add tests
     def _get_mapper(self):
+        try:
+            options = self.work.options
+        except AttributeError:
+            options = {}
+        if options.get("mapper"):
+            self._mapper_name = options["mapper"]
         if self._mapper_name:
             return self.component_by_name(self._mapper_name)
         return self.component(usage=self._mapper_usage)
